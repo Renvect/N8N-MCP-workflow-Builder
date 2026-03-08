@@ -1,0 +1,26 @@
+{
+    "name": "@n8n-agent/mcp-server",
+    "version": "0.1.0",
+    "description": "MCP Server for n8n Agent Tool - exposes workflow building tools to AI IDEs",
+    "main": "dist/server.js",
+    "scripts": {
+        "build": "tsc",
+        "start": "node dist/server.js",
+        "dev": "ts-node src/server.ts",
+        "mcp": "node dist/server.js --mcp"
+    },
+    "keywords": [
+        "mcp",
+        "n8n",
+        "agent",
+        "workflow"
+    ],
+    "dependencies": {
+        "@modelcontextprotocol/sdk": "^1.25.2"
+    },
+    "devDependencies": {
+        "@types/node": "^20.10.0",
+        "ts-node": "^10.9.0",
+        "typescript": "^5.3.0"
+    }
+}

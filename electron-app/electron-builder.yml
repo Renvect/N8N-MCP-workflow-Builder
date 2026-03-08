@@ -1,0 +1,76 @@
+appId: com.n8nlibrary.mcp-guardrail
+productName: N8N MCP Guardrail
+copyright: Copyright © 2026 N8N Library
+
+# Security: Flip fuses after packaging
+afterPack: ./scripts/flip-fuses.js
+
+directories:
+  output: out/installer
+  buildResources: assets
+
+files:
+  - dist/**/*.js
+  - dist/**/*.jsc
+  - dist/*.js
+  - dist/*.jsc
+  - renderer/**/*
+  - "assets/n8n mcp.ico"
+  - node_modules/**/*
+  - package.json
+  - rules.md
+  - n8n_middleware_commands.md
+
+extraResources:
+  - from: "assets/n8n mcp.ico"
+    to: "assets/n8n mcp.ico"
+  - from: ../rust-core/node-types-schema.json
+    to: rust-core/node-types-schema.json
+  - from: ../mcp-server/dist
+    to: mcp-server/dist
+  - from: ../mcp-server/node_modules
+    to: mcp-server/node_modules
+  - from: ../skills
+    to: skills
+
+# Unpack .jsc files so bytenode can load them (required for bytecode protection)
+asar: false
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+    - target: zip
+      arch:
+        - x64
+  icon: "assets/n8n mcp.ico"
+  signAndEditExecutable: true
+  # signtoolOptions:
+  #   sign: ./scripts/win-sign.js
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+  shortcutName: N8N MCP Guardrail
+  runAfterFinish: true
+  perMachine: false
+  allowElevation: false
+  deleteAppDataOnUninstall: false
+  installerIcon: "assets/n8n mcp.ico"
+  uninstallerIcon: "assets/n8n mcp.ico"
+  artifactName: "N8N.MCP.Guardrail.Setup.${version}.Fixed.${ext}"
+  menuCategory: false
+  include: build/installer.nsh
+
+# Generate latest.yml with SHA-512 hash in Base64 (default behavior, explicit for clarity)
+# This file is used by electron-updater to verify downloads
+generateUpdatesFilesForAllChannels: true
+
+# Publish configuration for electron-updater
+publish:
+  provider: generic
+  url: https://tvxezpnyhgzqtzccdjeu.supabase.co/functions/v1/desktop-updates
+

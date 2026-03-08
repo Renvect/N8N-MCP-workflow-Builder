@@ -1,0 +1,73 @@
+{
+    "name": "n8n-mcp-guardrail",
+    "version": "0.1.1",
+    "description": "Agentic Middleware Controller for n8n Workflow Building",
+    "author": "N8N Library",
+    "main": "dist/main.js",
+    "bin": {
+        "n8n-cli": "./dist/cli.js"
+    },
+    "scripts": {
+        "start": "tsc && electron-forge start",
+        "build": "tsc && electron-forge make",
+        "build:cli": "tsc",
+        "package": "electron-forge package",
+        "make": "electron-forge make",
+        "compile:bytecode": "electron scripts/compile-bytecode.js",
+        "dist:win": "npm --prefix ../mcp-server run build && tsc && electron scripts/compile-bytecode.js && electron-builder --win",
+        "dist:win:unsigned": "set CSC_IDENTITY_AUTO_DISCOVERY=false && npm --prefix ../mcp-server run build && tsc && electron scripts/compile-bytecode.js && electron-builder --win",
+        "dist:win:plain": "npm --prefix ../mcp-server run build && tsc && electron-builder --win",
+        "package:portable": "powershell -ExecutionPolicy Bypass -File scripts/package-portable.ps1"
+    },
+    "config": {
+        "forge": {
+            "packagerConfig": {
+                "name": "N8N MCP Guardrail",
+                "executableName": "n8n-mcp-guardrail",
+                "icon": "./assets/n8n mcp",
+                "asar": false
+            },
+            "makers": [
+                {
+                    "name": "@electron-forge/maker-squirrel",
+                    "config": {
+                        "name": "n8n_mcp_guardrail"
+                    }
+                },
+                {
+                    "name": "@electron-forge/maker-zip",
+                    "platforms": [
+                        "darwin",
+                        "linux"
+                    ]
+                },
+                {
+                    "name": "@electron-forge/maker-deb",
+                    "config": {}
+                }
+            ]
+        }
+    },
+    "dependencies": {
+        "bytenode": "^1.5.7",
+        "commander": "^11.1.0",
+        "cors": "^2.8.5",
+        "electron-updater": "^6.6.2",
+        "electron-store": "^8.1.0",
+        "express": "^5.2.1",
+        "node-machine-id": "^1.1.12"
+    },
+    "devDependencies": {
+        "@electron-forge/cli": "^7.2.0",
+        "@electron-forge/maker-deb": "^7.2.0",
+        "@electron-forge/maker-squirrel": "^7.2.0",
+        "@electron-forge/maker-zip": "^7.2.0",
+        "@electron/fuses": "^1.8.0",
+        "@types/cors": "^2.8.19",
+        "@types/express": "^5.0.6",
+        "@types/node": "^20.10.0",
+        "electron": "^28.0.0",
+        "electron-builder": "^26.4.0",
+        "typescript": "^5.3.0"
+    }
+}

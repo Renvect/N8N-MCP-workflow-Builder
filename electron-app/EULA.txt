@@ -1,0 +1,113 @@
+TERMS OF SALE
+
+Last Updated: January 8, 2026
+
+This Terms of Sale agreement is between you ("Buyer") and SKIPPER CRO LLC, a Delaware limited liability company ("Seller").
+
+1. PURCHASE
+By completing your purchase, you are acquiring a perpetual license to use the Software as described in the accompanying End User License Agreement (EULA). This is a one-time purchase with no recurring fees.
+
+2. PAYMENT
+All prices are in USD. Payment is processed securely through Stripe. All sales are subject to applicable taxes.
+
+3. DELIVERY
+Upon successful payment, you will receive immediate access to download the Software and a license key will be generated for your account.
+
+4. REFUND POLICY
+Due to the nature of digital software:
+- All sales are FINAL once the Software has been downloaded or a license key has been activated.
+- Exceptions may be considered at our sole discretion if:
+  (a) The Software fails to install or run on your compatible hardware within 14 days of purchase, AND
+  (b) You have contacted support and allowed us reasonable opportunity to resolve the issue.
+- Refund requests must be submitted within 14 days of purchase.
+
+5. NO CHARGEBACKS
+You agree not to initiate any chargeback or dispute with your payment provider without first contacting us. Fraudulent chargebacks will be pursued to the fullest extent of the law.
+
+6. CONTACT
+For purchase inquiries: support@n8nlibrary.com
+
+By completing this purchase, you acknowledge that you have read and agree to these Terms of Sale and the End User License Agreement.
+
+================================================================================
+
+END USER LICENSE AGREEMENT (EULA)
+
+Last Updated: January 15, 2026
+
+AGREEMENT ON SOFTWARE USAGE AND MAINTENANCE
+
+Between:
+SKIPPER CRO LLC, with its registered office in Delaware, United States (hereinafter: the "Licensor" or "Company")
+AND
+The individual or legal entity purchasing the license (hereinafter: the "Licensee" or "Client")
+
+I. SUBJECT OF THE AGREEMENT
+Article 1
+(1) The subject of this Agreement is the license to use and the maintenance of the "n8n Agentic Middleware" software package (hereinafter: "Software Product").
+(2) The Software Product is a Windows-based middleware application designed to interface between the n8n automation platform and local IDE agents.
+
+II. LICENSE GRANT AND TIERS
+Article 2
+(1) Upon payment of the applicable fee, Licensor grants Licensee a non-exclusive, non-transferable right to use the Software Product under the following terms based on the purchased plan:
+
+A) "Indie / Personal" Plan (Annual License)
+- Term: 1 (one) year from the date of purchase.
+- Scope: Installation and usage on up to 1 (one) personal computer/device.
+- Updates: Included during the active term.
+
+B) "Lifetime" Plan (Perpetual License)
+- Term: Perpetual (Lifetime) usage rights.
+- Scope: Installation and usage on up to 2 (two) devices (e.g., Laptop + Workstation).
+- Updates: Lifetime access to minor and major version updates.
+
+III. MAINTENANCE AND SUPPORT
+Article 3
+(1) The Licensor provides the following maintenance services during the validity of the license:
+- Delivery of upgraded versions/patches for the Software Product.
+- Adaptation of the Software Product to changes in supported external APIs (e.g., n8n, OpenAI) where commercially feasible.
+- Correction of proven errors in the Software Product code.
+- Professional assistance via email (support@n8nlibrary.com) to identify causes of irregularities.
+
+(2) Maintenance does NOT include:
+- On-site intervention at the Licensee's premises.
+- Development of custom features not originally in the Software Product specification.
+- Troubleshooting issues caused by Licensee's hardware, OS failures, or third-party software conflicts (e.g., firewall/antivirus blocking the middleware).
+
+Article 4
+(1) Support is provided remotely. The Licensor will attempt to resolve reported issues via email instructions or provided documentation.
+(2) Response times are on a "best effort" basis, typically within 1-2 business days for critical issues.
+
+IV. OBLIGATIONS OF THE LICENSEE
+Article 5
+(1) Hardware & Environment: The Licensee is solely responsible for procuring and maintaining the necessary computer hardware, Windows operating system environment, and internet connection required to run the Software Product. The Licensor bears no responsibility for the Software's failure to run on incompatible or poorly maintained hardware.
+(2) Data Backup: The Licensee is strictly obliged to perform regular data backups of their workflows, settings, and local files. The Software Product interacts with local file systems; the Licensor bears NO responsibility for any data loss, corruption, or overwritten files resulting from the use of the Software.
+(3) The Licensee agrees to use the Software Product in accordance with provided documentation and not to use it for any illegal purposes or to reverse engineer the source code.
+
+V. SECURITY AND PRIVACY
+Article 6
+(1) Local-First Architecture: Valid for the "Indie" and "Lifetime" plans, the Software Product is designed to run locally. The Licensor does not transmit your workflow data or API keys to its own servers, except for license validation checks.
+(2) Confidentiality: The Licensor undertakes to keep as a business secret any data regarding the Licensee it may encounter during support sessions.
+(3) The Licensee is the sole controller of the personal data they process using the Software Product.
+
+VI. LIMITATION OF LIABILITY
+Article 7
+(1) The Software Product is provided "AS IS". The Licensor does not warrant that the Software will be error-free or uninterrupted.
+(2) To the maximum extent permitted by law, the Licensor shall not be liable for any indirect, special, incidental, or consequential damages (including lost profits or data) arising out of the use or inability to use the Software Product.
+(3) The Licensor is not responsible for the legal validity of the content/workflows generated by the Licensee using the Software.
+(4) THIRD-PARTY DEPENDENCIES: The Software Product integrates with third-party services and APIs, including but not limited to n8n's API endpoints. The Licensor has no control over these third-party services. Changes to third-party APIs (including n8n endpoint modifications, deprecations, or breaking changes) may cause the Software Product to stop working or function improperly. The Licensor shall NOT be held responsible for any loss of functionality, data loss, or damages resulting from changes made by third-party service providers. The Licensor will make commercially reasonable efforts to adapt the Software to such changes where feasible, but does not guarantee compatibility with future versions of third-party APIs.
+
+VII. TERMINATION
+Article 8
+(1) Subscriptions (Indie/Personal) automatically terminate at the end of the paid period if not renewed.
+(2) The Licensor may terminate this Agreement immediately if the Licensee breaches any material term (e.g., unauthorized distribution, exceeding device limits).
+(3) Upon termination, the Licensee must cease all use of the Software Product.
+
+VIII. FINAL PROVISIONS
+Article 9
+(1) This Agreement allows the Licensor to include the Licensee in its reference list of users unless explicitly requested otherwise by the Licensee.
+(2) Any disputes arising from this Agreement shall be resolved amicably. If not possible, the disputes shall be subject to the jurisdiction of the courts in Delaware, United States.
+
+CONTACT INFORMATION
+SKIPPER CRO LLC
+support@n8nlibrary.com

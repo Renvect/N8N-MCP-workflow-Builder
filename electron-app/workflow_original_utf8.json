@@ -1,0 +1,321 @@
+﻿{
+  "status": 200,
+  "data": {
+    "updatedAt": "2026-01-09T12:54:45.091Z",
+    "createdAt": "2025-12-28T13:33:48.587Z",
+    "id": "zvDJbOnLKEAdJ0Q1",
+    "name": "AI Content Gen - CLI Test OK",
+    "description": null,
+    "active": false,
+    "isArchived": true,
+    "nodes": [
+      {
+        "id": "node_1766928825697_3q1pev61e",
+        "name": "Webhook Trigger",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1,
+        "position": [
+          250,
+          300
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "node_1766928825697_fbgrkj3rc",
+        "name": "Manual Trigger",
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          450,
+          300
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "node_1766928825697_pqo8an3qr",
+        "name": "AI Agent",
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 1,
+        "position": [
+          650,
+          300
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "node_1766928825697_b0cegqkg7",
+        "name": "Google Gemini Chat Model",
+        "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+        "typeVersion": 1,
+        "position": [
+          850,
+          300
+        ],
+        "parameters": {
+          "apiKey": "YOUR_API_KEY"
+        }
+      },
+      {
+        "id": "node_1766928825697_x1xfkemcr",
+        "name": "CSV Reader",
+        "type": "n8n-nodes-base.readBinaryFile",
+        "typeVersion": 1,
+        "position": [
+          1050,
+          300
+        ],
+        "parameters": {
+          "filePath": "/path/to/urls.csv"
+        }
+      },
+      {
+        "id": "node_1766928825697_a83gn4pyb",
+        "name": "Postgres",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 1,
+        "position": [
+          1250,
+          300
+        ],
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "INSERT INTO temp_data (url, content) VALUES (:url, :content)"
+        }
+      },
+      {
+        "id": "node_1766928825697_6j4plwaes",
+        "name": "Buffer Window Memory",
+        "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+        "typeVersion": 1,
+        "position": [
+          1450,
+          300
+        ],
+        "parameters": {}
+      },
+      {
+        "id": "node_1766928825697_748hm2j5k",
+        "name": "Screenshot Capture",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 1,
+        "position": [
+          1650,
+          300
+        ],
+        "parameters": {
+          "url": "https://api.screenshot.com/capture",
+          "method": "POST",
+          "authentication": "predefinedCredentialType"
+        }
+      },
+      {
+        "id": "node_1766928825697_0dukv8o8b",
+        "name": "Instagram Post",
+        "type": "n8n-nodes-base.instagram",
+        "typeVersion": 1,
+        "position": [
+          1850,
+          300
+        ],
+        "parameters": {
+          "operation": "post",
+          "text": "Generated content",
+          "image": "screenshot.png"
+        }
+      },
+      {
+        "id": "node_1766928825697_x8qma2yxp",
+        "name": "Facebook Post",
+        "type": "n8n-nodes-base.facebook",
+        "typeVersion": 1,
+        "position": [
+          2050,
+          300
+        ],
+        "parameters": {
+          "operation": "post",
+          "text": "Generated content",
+          "image": "screenshot.png"
+        }
+      },
+      {
+        "id": "node_1766928825697_334yulce5",
+        "name": "Schedule Trigger",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1,
+        "position": [
+          2250,
+          300
+        ],
+        "parameters": {
+          "cronExpression": "0 9 * * *"
+        }
+      }
+    ],
+    "connections": {
+      "Webhook Trigger": {
+        "main": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "main"
+            }
+          ]
+        ]
+      },
+      "Manual Trigger": {
+        "main": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "main"
+            }
+          ]
+        ]
+      },
+      "AI Agent": {
+        "main": [
+          [
+            {
+              "node": "Google Gemini Chat Model",
+              "type": "main"
+            }
+          ]
+        ]
+      },
+      "Google Gemini Chat Model": {
+        "main": [
+          [
+            {
+              "node": "CSV Reader",
+              "type": "main"
+            }
+          ]
+        ]
+      },
+      "CSV Reader": {
+        "main": [
+          [
+            {
+              "node": "Postgres",
+              "type": "main"
+            }
+          ]
+        ]
+      },
+      "Postgres": {
+        "main": [
+          [
+            {
+              "node": "Buffer Window Memory",
+              "type": "main"
+            }
+          ]
+        ]
+      },
+      "Buffer Window Memory": {
+        "main": [
+          [
+            {
+              "node": "Screenshot Capture",
+              "type": "main"
+            }
+          ]
+        ]
+      },
+      "Screenshot Capture": {
+        "main": [
+          [
+            {
+              "node": "Instagram Post",
+              "type": "main"
+            },
+            {
+              "node": "Facebook Post",
+              "type": "main"
+            }
+          ]
+        ]
+      },
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Instagram Post",
+              "type": "main"
+            },
+            {
+              "node": "Facebook Post",
+              "type": "main"
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "saveDataSuccessExecution": "all",
+      "saveManualExecutions": true,
+      "executionOrder": "v1",
+      "callerPolicy": "workflowsFromSameOwner",
+      "availableInMCP": false
+    },
+    "staticData": null,
+    "meta": null,
+    "pinData": null,
+    "versionId": "18c14185-083e-401b-8783-451f8f8887ed",
+    "activeVersionId": null,
+    "versionCounter": 3,
+    "triggerCount": 0,
+    "shared": [
+      {
+        "updatedAt": "2025-12-28T13:33:48.781Z",
+        "createdAt": "2025-12-28T13:33:48.781Z",
+        "role": "workflow:owner",
+        "workflowId": "zvDJbOnLKEAdJ0Q1",
+        "projectId": "ogO4S7zUZmVpw0JA",
+        "project": {
+          "updatedAt": "2025-12-18T10:47:15.489Z",
+          "createdAt": "2025-12-18T10:44:36.313Z",
+          "id": "ogO4S7zUZmVpw0JA",
+          "name": "Aljosa Raseta <aljosaraseta@gmail.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "projectRelations": [
+            {
+              "updatedAt": "2025-12-18T10:44:36.314Z",
+              "createdAt": "2025-12-18T10:44:36.314Z",
+              "userId": "b9c2b3c4-e04f-4260-8837-0749e25e7ec5",
+              "projectId": "ogO4S7zUZmVpw0JA",
+              "user": {
+                "updatedAt": "2026-01-09T11:57:08.000Z",
+                "createdAt": "2025-12-18T10:44:34.718Z",
+                "id": "b9c2b3c4-e04f-4260-8837-0749e25e7ec5",
+                "email": "aljosaraseta@gmail.com",
+                "firstName": "Aljosa",
+                "lastName": "Raseta",
+                "personalizationAnswers": {
+                  "version": "v4",
+                  "personalization_survey_submitted_at": "2025-12-18T10:47:42.135Z",
+                  "personalization_survey_n8n_version": "1.122.4",
+                  "automationGoalDevops": [],
+                  "companyType": "saas",
+                  "role": "it"
+                },
+                "settings": {
+                  "userActivated": false
+                },
+                "disabled": false,
+                "mfaEnabled": false,
+                "lastActiveAt": "2026-01-09",
+                "isPending": false
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "tags": [],
+    "activeVersion": null
+  }
+}

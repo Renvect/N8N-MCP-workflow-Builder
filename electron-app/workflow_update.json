@@ -1,0 +1,220 @@
+{
+    "name": "AI Content Gen - Node Removed",
+    "nodes": [
+        {
+            "id": "node_1766928825697_3q1pev61e",
+            "name": "Webhook Trigger",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                250,
+                300
+            ],
+            "parameters": {}
+        },
+        {
+            "id": "node_1766928825697_fbgrkj3rc",
+            "name": "Manual Trigger",
+            "type": "n8n-nodes-base.manualTrigger",
+            "typeVersion": 1,
+            "position": [
+                450,
+                300
+            ],
+            "parameters": {}
+        },
+        {
+            "id": "node_1766928825697_pqo8an3qr",
+            "name": "AI Agent",
+            "type": "@n8n/n8n-nodes-langchain.agent",
+            "typeVersion": 1,
+            "position": [
+                650,
+                300
+            ],
+            "parameters": {}
+        },
+        {
+            "id": "node_1766928825697_b0cegqkg7",
+            "name": "Google Gemini Chat Model",
+            "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+            "typeVersion": 1,
+            "position": [
+                850,
+                300
+            ],
+            "parameters": {
+                "apiKey": "YOUR_API_KEY"
+            }
+        },
+        {
+            "id": "node_1766928825697_x1xfkemcr",
+            "name": "CSV Reader",
+            "type": "n8n-nodes-base.readBinaryFile",
+            "typeVersion": 1,
+            "position": [
+                1050,
+                300
+            ],
+            "parameters": {
+                "filePath": "/path/to/urls.csv"
+            }
+        },
+        {
+            "id": "node_1766928825697_a83gn4pyb",
+            "name": "Postgres",
+            "type": "n8n-nodes-base.postgres",
+            "typeVersion": 1,
+            "position": [
+                1250,
+                300
+            ],
+            "parameters": {
+                "operation": "executeQuery",
+                "query": "INSERT INTO temp_data (url, content) VALUES (:url, :content)"
+            }
+        },
+        {
+            "id": "node_1766928825697_6j4plwaes",
+            "name": "Buffer Window Memory",
+            "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+            "typeVersion": 1,
+            "position": [
+                1450,
+                300
+            ],
+            "parameters": {}
+        },
+        {
+            "id": "node_1766928825697_748hm2j5k",
+            "name": "Screenshot Capture",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 1,
+            "position": [
+                1650,
+                300
+            ],
+            "parameters": {
+                "url": "https://api.screenshot.com/capture",
+                "method": "POST",
+                "authentication": "predefinedCredentialType"
+            }
+        },
+        {
+            "id": "node_1766928825697_0dukv8o8b",
+            "name": "Instagram Post",
+            "type": "n8n-nodes-base.instagram",
+            "typeVersion": 1,
+            "position": [
+                1850,
+                300
+            ],
+            "parameters": {
+                "operation": "post",
+                "text": "Generated content",
+                "image": "screenshot.png"
+            }
+        },
+        {
+            "id": "node_1766928825697_x8qma2yxp",
+            "name": "Facebook Post",
+            "type": "n8n-nodes-base.facebook",
+            "typeVersion": 1,
+            "position": [
+                2050,
+                300
+            ],
+            "parameters": {
+                "operation": "post",
+                "text": "Generated content",
+                "image": "screenshot.png"
+            }
+        }
+    ],
+    "connections": {
+        "Webhook Trigger": {
+            "main": [
+                [
+                    {
+                        "node": "AI Agent",
+                        "type": "main"
+                    }
+                ]
+            ]
+        },
+        "Manual Trigger": {
+            "main": [
+                [
+                    {
+                        "node": "AI Agent",
+                        "type": "main"
+                    }
+                ]
+            ]
+        },
+        "AI Agent": {
+            "main": [
+                [
+                    {
+                        "node": "Google Gemini Chat Model",
+                        "type": "main"
+                    }
+                ]
+            ]
+        },
+        "Google Gemini Chat Model": {
+            "main": [
+                [
+                    {
+                        "node": "CSV Reader",
+                        "type": "main"
+                    }
+                ]
+            ]
+        },
+        "CSV Reader": {
+            "main": [
+                [
+                    {
+                        "node": "Postgres",
+                        "type": "main"
+                    }
+                ]
+            ]
+        },
+        "Postgres": {
+            "main": [
+                [
+                    {
+                        "node": "Buffer Window Memory",
+                        "type": "main"
+                    }
+                ]
+            ]
+        },
+        "Buffer Window Memory": {
+            "main": [
+                [
+                    {
+                        "node": "Screenshot Capture",
+                        "type": "main"
+                    }
+                ]
+            ]
+        },
+        "Screenshot Capture": {
+            "main": [
+                [
+                    {
+                        "node": "Instagram Post",
+                        "type": "main"
+                    },
+                    {
+                        "node": "Facebook Post",
+                        "type": "main"
+                    }
+                ]
+            ]
+        }
+    }
+}

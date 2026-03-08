@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="../assets/n8n%20mcp.ico">
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://tvxezpnyhgzqtzccdjeu.supabase.co; frame-ancestors 'none'; form-action 'self'; base-uri 'self'; object-src 'none'">
+    <title>N8N MCP Guardrail</title>
+    <style>
+        :root {
+            /* VS Code Dark Default Colors */
+            --bg-main: #1e1e1e;
+            --bg-sidebar: #252526;
+            --bg-activity-bar: #333333;
+            --bg-input: #3c3c3c;
+            --border-color: #454545;
+            --accent: #007acc;
+            /* VS Code Blue */
+            --accent-hover: #0062a3;
+            --text-primary: #cccccc;
+            --text-secondary: #858585;
+            --focus-border: #007fd4;
+            --success: #4ec9b0;
+            --error: #f48771;
+            --font-family: 'Segoe UI', Inter, -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background: var(--bg-main);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+            font-size: 13px;
+        }
+
+        /* Layout */
+        .app-layout {
+            display: flex;
+            height: 100%;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--bg-main);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .sidebar-header {
+            padding: 10px 20px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            margin-top: 10px;
+        }
+
+        .brand {
+            padding: 15px 20px;
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-items {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            margin-top: 10px;
+        }
+
+        .tab-btn {
+            padding: 8px 20px;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            text-align: left;
+            cursor: pointer;
+            font-size: 13px;
+            border-left: 3px solid transparent;
+            transition: all 0.1s;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+            background: #2a2d2e;
+        }
+
+        .tab-btn.active {
+            color: white;
+            background: #37373d;
+            border-left-color: var(--accent);
+        }
+
+        .sidebar-footer {
+            padding: 15px;
+            border-top: 1px solid var(--bg-main);
+        }
+
+        /* Content Area */
+        .content-area {
+            flex: 1;
+            padding: 20px 40px;
+            overflow-y: auto;
+            max-width: 1000px;
+        }
+
+        /* Headings */
+        h2 {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 20px;
+            color: white;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        h3 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="email"],
+        input[type="url"] {
+            width: 100%;
+            background: var(--bg-input);
+            border: 1px solid transparent;
+            color: var(--text-primary);
+            padding: 6px 8px;
+            font-size: 13px;
+            font-family: inherit;
+        }
+
+        input:focus {
+            border-color: var(--focus-border);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 6px 14px;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            min-width: 80px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-secondary {
+            background: #3e3e42;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #4e4e52;
+        }
+
+        /* Status Badge in Sidebar */
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #666;
+        }
+
+        .status-dot.running {
+            background: var(--success);
+        }
+
+        .status-dot.stopped {
+            background: var(--error);
+        }
+
+        /* Toggle Group */
+        .toggle-group {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .toggle-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            color: var(--text-primary);
+        }
+
+        .required-text {
+            color: var(--error);
+            font-size: 11px;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* (License modal styles removed) */
+
+        /* Helpers */
+        .hidden {
+            display: none !important;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.2s;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card {
+            background: transparent;
+            margin-bottom: 30px;
+        }
+
+        /* Code Block */
+        .code-block {
+            background: #101010;
+            padding: 15px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 12px;
+            color: #d4d4d4;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+            margin-top: 10px;
+            white-space: pre;
+        }
+
+        .sub-tabs {
+            display: flex;
+            gap: 1px;
+            background: var(--bg-sidebar);
+            padding: 5px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+            width: fit-content;
+        }
+
+        .sub-tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 5px 15px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .sub-tab-btn.active {
+            background: var(--bg-input);
+            color: white;
+        }
+
+        .config-block-wrapper {
+            position: relative;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            padding: 4px 8px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        .copy-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .auth-section-title {
+            color: var(--text-secondary);
+            font-size: 11px;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin: 15px 0 10px 0;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 5px;
+        }
+
+        /* Update Banner */
+        .update-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 20px;
+            z-index: 10000;
+            transform: translateY(-100%);
+            transition: transform 0.3s ease;
+        }
+
+        .update-banner.visible {
+            transform: translateY(0);
+        }
+
+        .update-banner-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .update-icon {
+            font-size: 20px;
+        }
+
+        .update-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-sm {
+            padding: 4px 10px;
+            font-size: 12px;
+            min-width: 60px;
+        }
+
+        .btn-ghost {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .btn-ghost:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Update Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(3px);
+        }
+
+        .modal-content {
+            position: relative;
+            background: var(--bg-sidebar);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            z-index: 1;
+        }
+
+        .update-modal-content {
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 18px;
+            border: none;
+            padding: 0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-footer {
+            padding: 15px 20px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .update-version-info {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            padding: 15px;
+            background: var(--bg-input);
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .arrow {
+            font-size: 20px;
+            color: var(--accent);
+        }
+
+        .new-version strong {
+            color: var(--accent);
+        }
+
+        .release-notes {
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 15px;
+            background: var(--bg-main);
+            border-radius: 4px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .release-notes h3 {
+            margin-top: 0;
+            color: var(--accent);
+        }
+
+        .release-notes ul {
+            padding-left: 20px;
+            margin: 10px 0;
+        }
+
+        /* Progress Bar */
+        .download-progress {
+            margin-top: 20px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--bg-input);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.2s ease;
+        }
+
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Silent auto-update: No banner or modal, status shown in sidebar only -->
+
+    <!-- Main Layout -->
+    <div class="app-layout container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="brand">
+                <span style="color: var(--accent);">N8N MCP Guardrail</span>
+            </div>
+
+            <div class="sidebar-header">MENU</div>
+            <nav class="nav-items tabs">
+                <button class="tab-btn active" data-tab="config">Settings</button>
+                <button class="tab-btn" data-tab="guides">Integration Guides</button>
+                <button class="tab-btn" data-tab="skills">AI Skills</button>
+                <button class="tab-btn" data-tab="rules">Rules</button>
+                <button class="tab-btn" data-tab="commands">Commands</button>
+                <button class="tab-btn" data-tab="schemas">Node Schemas</button>
+                <button class="tab-btn" data-tab="ghost-pilot">Ghost Pilot</button>
+            </nav>
+
+            <div style="flex: 1;"></div>
+
+            <div class="sidebar-footer">
+                <div id="server-status" class="status-badge">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Checking status...</span>
+                </div>
+
+                <div id="update-status" class="status-badge" style="margin-top: 10px; display: none;">
+                    <span id="update-dot" class="status-dot"></span>
+                    <span id="update-status-text" class="status-text">Updates: -</span>
+                </div>
+
+                <div style="margin-top: 10px; display: none;">
+                    <button id="check-updates-btn" class="btn btn-secondary" style="width: 100%;">Check Updates</button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="content-area">
+
+            <!-- Config Tab -->
+            <div id="config-tab" class="tab-content active">
+                <h2>Configuration</h2>
+
+                <div class="card">
+                    <h3>n8n Instance (Self-Hosted)</h3>
+
+                    <div class="form-group">
+                        <div class="required-text">Required</div>
+                        <label for="n8n-url">Instance URL</label>
+                        <input type="url" id="n8n-url" placeholder="Enter instance URL">
+                    </div>
+
+                    <div class="auth-section-title">Authentication</div>
+                    <div class="form-group">
+                        <div class="required-text">Required</div>
+                        <label for="n8n-api-key">API Key (Recommended)</label>
+                        <input type="password" id="n8n-api-key" placeholder="Enter API Key">
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div class="form-group">
+                            <div class="required-text">Required — n8n sign up details</div>
+                            <label for="n8n-email">Email</label>
+                            <input type="email" id="n8n-email" placeholder="user@example.com">
+                        </div>
+                        <div class="form-group">
+                            <div class="required-text">Required — n8n sign up details</div>
+                            <label for="n8n-password">Password</label>
+                            <input type="password" id="n8n-password" placeholder="••••••••">
+                        </div>
+                    </div>
+                </div>
+
+
+
+                <div class="form-group" style="margin-top: 30px; display: flex; align-items: center; gap: 15px;">
+                    <button id="save-btn" class="btn btn-primary">Save Changes</button>
+                    <button id="test-connection-btn" class="btn btn-secondary">Connect</button>
+                    <span id="connection-status" style="font-size: 12px; margin-left: auto;"></span>
+                </div>
+            </div>
+
+            <!-- Ghost Pilot Tab -->
+            <div id="ghost-pilot-tab" class="tab-content">
+                <h2>Ghost Pilot (Visual Agent)</h2>
+                <div class="card">
+                    <h3>Visibility Control</h3>
+                    <div class="form-group">
+                        <label class="toggle-label">
+                            <input type="checkbox" id="ghost-pilot-toggle">
+                            <span>Show Browser View</span>
+                        </label>
+                        <p style="color: var(--text-secondary); margin-top: 10px; line-height: 1.5;">
+                            When enabled, the internal browser used by the agent will be overlaid on this window.
+                            <br>You can watch the agent navigate, click, and type in real-time.
+                            <br><strong>Note:</strong> Uncheck this to hide the view and return to these settings.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Guides Tab -->
+            <div id="guides-tab" class="tab-content">
+                <h2>Integration Guides</h2>
+
+                <!-- Cursor IDE Setup -->
+                <div class="card">
+                    <h3>Cursor IDE Setup</h3>
+
+                    <!-- MCP Configuration -->
+                    <div class="form-group">
+                        <label>MCP Configuration Path</label>
+                        <div class="code-block" style="padding: 8px;">~/.cursor/mcp.json</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Config JSON <span id="cursor-mode-badge"
+                                style="float: right; color: var(--accent);"></span></label>
+                        <div class="config-block-wrapper">
+                            <div id="cursor-mcp-config" class="code-block">Loading...</div>
+                            <button class="copy-btn" onclick="copyToClipboard('cursor-mcp-config')">Copy</button>
+                        </div>
+                    </div>
+
+                    <!-- Rules Setup -->
+                    <div class="form-group" style="margin-top: 25px;">
+                        <label>Rules Setup</label>
+                        <div
+                            style="padding: 12px; background: rgba(0, 122, 204, 0.1); border-left: 3px solid var(--accent); margin-bottom: 10px;">
+                            <p style="margin: 0; color: var(--text-primary); font-size: 12px; line-height: 1.6;">
+                                <strong>Project Rules:</strong> Create <code>.cursor/rules/</code> folder in project
+                                root. Add <code>RULE.md</code> files within named folders.<br>
+                                <strong>Global Rules:</strong> Go to Cursor Settings → Rules → User Rules (applies to
+                                all projects)<br>
+                                <strong>File Format:</strong> Markdown (.md) with frontmatter metadata
+                            </p>
+                        </div>
+                        <div style="font-size: 11px; color: var(--text-secondary); margin-top: 8px;">
+                            <strong>Example:</strong> <code>.cursor/rules/n8n-workflow/RULE.md</code>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Windsurf Setup -->
+                <div class="card">
+                    <h3>Windsurf IDE Setup</h3>
+
+                    <!-- MCP Configuration -->
+                    <div class="form-group">
+                        <label>MCP Configuration Path</label>
+                        <div class="code-block" style="padding: 8px;">~/.codeium/windsurf/mcp_config.json</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Config JSON <span id="windsurf-mode-badge"
+                                style="float: right; color: var(--accent);"></span></label>
+                        <div class="config-block-wrapper">
+                            <div id="windsurf-mcp-config" class="code-block">Loading...</div>
+                            <button class="copy-btn" onclick="copyToClipboard('windsurf-mcp-config')">Copy</button>
+                        </div>
+                    </div>
+
+                    <!-- Rules Setup -->
+                    <div class="form-group" style="margin-top: 25px;">
+                        <label>Rules Setup</label>
+                        <div
+                            style="padding: 12px; background: rgba(0, 122, 204, 0.1); border-left: 3px solid var(--accent); margin-bottom: 10px;">
+                            <p style="margin: 0; color: var(--text-primary); font-size: 12px; line-height: 1.6;">
+                                <strong>Project Rules:</strong> Create <code>.windsurfrules</code> file in project root
+                                directory<br>
+                                <strong>Global Rules:</strong> Create <code>global_rules.md</code> (managed via IDE
+                                settings, bottom right → above memories)<br>
+                                <strong>File Format:</strong> Markdown (.md) format
+                            </p>
+                        </div>
+                        <div style="font-size: 11px; color: var(--text-secondary); margin-top: 8px;">
+                            <strong>Location:</strong> Project root → <code>.windsurfrules</code>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Antigravity Setup -->
+                <div class="card">
+                    <h3>Antigravity IDE Setup</h3>
+
+                    <!-- MCP Configuration -->
+                    <div class="form-group">
+                        <label>MCP Configuration Path</label>
+                        <div class="code-block" style="padding: 8px;">~/.gemini/antigravity/mcp_config.json</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Config JSON <span id="antigravity-mode-badge"
+                                style="float: right; color: var(--accent);"></span></label>
+                        <div class="config-block-wrapper">
+                            <div id="antigravity-mcp-config" class="code-block">Loading...</div>
+                            <button class="copy-btn" onclick="copyToClipboard('antigravity-mcp-config')">Copy</button>
+                        </div>
+                    </div>
+
+                    <!-- Rules Setup -->
+                    <div class="form-group" style="margin-top: 25px;">
+                        <label>Rules Setup</label>
+                        <div
+                            style="padding: 12px; background: rgba(0, 122, 204, 0.1); border-left: 3px solid var(--accent); margin-bottom: 10px;">
+                            <p style="margin: 0; color: var(--text-primary); font-size: 12px; line-height: 1.6;">
+                                <strong>Global Rules:</strong> Create or edit <code>~/.gemini/GEMINI.md</code> (applies
+                                to all workspaces)<br>
+                                <strong>Workspace Rules:</strong> Create <code>.agent/rules/</code> folder in project
+                                root with .md files<br>
+                                <strong>File Format:</strong> Markdown (.md) with constraints and instructions<br>
+                                <strong>Activation:</strong> Can be set to "Always On", glob pattern, or manual
+                            </p>
+                        </div>
+                        <div style="font-size: 11px; color: var(--text-secondary); margin-top: 8px;">
+                            <strong>Example:</strong> <code>.agent/rules/workflow.md</code> or
+                            <code>~/.gemini/GEMINI.md</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rules Tab -->
+            <div id="rules-tab" class="tab-content">
+                <h2>Rules Setup Guide</h2>
+
+                <!-- IDE Rules Setup -->
+                <div class="card">
+                    <h3>How to Set Up Rules in Your IDE</h3>
+                    <p style="margin-bottom: 20px; color: var(--text-secondary); font-size: 13px;">
+                        Rules help guide AI assistants in your IDE by providing project-specific instructions, coding
+                        standards, and context.
+                    </p>
+
+                    <!-- Cursor IDE -->
+                    <div style="margin-bottom: 25px;">
+                        <h4 style="color: var(--accent); margin-bottom: 10px;">Cursor IDE</h4>
+                        <div
+                            style="padding: 12px; background: rgba(0, 122, 204, 0.1); border-left: 3px solid var(--accent);">
+                            <p style="margin: 0; color: var(--text-primary); font-size: 12px; line-height: 1.6;">
+                                <strong>Project Rules:</strong> Create <code>.cursor/rules/</code> folder in project
+                                root. Add <code>RULE.md</code> files within named folders.<br>
+                                <strong>Global Rules:</strong> Go to Cursor Settings → Rules → User Rules (applies to
+                                all projects)<br>
+                                <strong>File Format:</strong> Markdown (.md) with frontmatter metadata
+                            </p>
+                        </div>
+                        <div style="font-size: 11px; color: var(--text-secondary); margin-top: 8px;">
+                            <strong>Example:</strong> <code>.cursor/rules/n8n-workflow/RULE.md</code>
+                        </div>
+                    </div>
+
+                    <!-- Windsurf -->
+                    <div style="margin-bottom: 25px;">
+                        <h4 style="color: var(--accent); margin-bottom: 10px;">Windsurf IDE</h4>
+                        <div
+                            style="padding: 12px; background: rgba(0, 122, 204, 0.1); border-left: 3px solid var(--accent);">
+                            <p style="margin: 0; color: var(--text-primary); font-size: 12px; line-height: 1.8;">
+                                <strong>Step 1:</strong> Click the <strong>3 dots</strong> in Cascade (top right)<br>
+                                <strong>Step 2:</strong> Select <strong>"Rules"</strong><br>
+                                <strong>Step 3:</strong> Type <code>workspace-rules</code> as the rule name<br>
+                                <strong>Step 4:</strong> Set to <strong>"Always On"</strong><br>
+                                <strong>Step 5:</strong> Paste your rules content in the editor that opens<br>
+                                <strong>Format:</strong> Markdown (.md)
+                            </p>
+                        </div>
+                        <div style="font-size: 11px; color: var(--text-secondary); margin-top: 8px;">
+                            💡 The rule will apply to your entire workspace
+                        </div>
+                    </div>
+
+                    <!-- Antigravity -->
+                    <div style="margin-bottom: 25px;">
+                        <h4 style="color: var(--accent); margin-bottom: 10px;">Antigravity IDE</h4>
+                        <div
+                            style="padding: 12px; background: rgba(0, 122, 204, 0.1); border-left: 3px solid var(--accent);">
+                            <p style="margin: 0; color: var(--text-primary); font-size: 12px; line-height: 1.8;">
+                                <strong>Step 1:</strong> Click the <strong>3 dots</strong> in agent chat (top right)<br>
+                                <strong>Step 2:</strong> Click <strong>"Customizations"</strong><br>
+                                <strong>Step 3:</strong> Click <strong>"Workspace Rules"</strong><br>
+                                <strong>Step 4:</strong> Enter <code>workspace-rules</code> as the name and hit
+                                <strong>Enter</strong><br>
+                                <strong>Step 5:</strong> Set to <strong>"Always On"</strong><br>
+                                <strong>Step 6:</strong> Paste your rules content inside and <strong>Save</strong><br>
+                                <strong>Format:</strong> Markdown (.md)
+                            </p>
+                        </div>
+                        <div style="font-size: 11px; color: var(--text-secondary); margin-top: 8px;">
+                            💡 For global rules, edit <code>~/.gemini/GEMINI.md</code> directly
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Middleware Rules Content -->
+                <div class="card">
+                    <h3>Middleware Rules Template</h3>
+                    <p style="margin-bottom: 15px; color: var(--text-secondary);">
+                        Copy the content below into your IDE's rules file to instruct agents on how to interact with
+                        this middleware.
+                    </p>
+                    <div class="form-group">
+                        <div class="config-block-wrapper">
+                            <div id="rules-content" class="code-block"
+                                style="white-space: pre-wrap; max-height: 600px; overflow-y: auto;">Loading rules...
+                            </div>
+                            <button class="copy-btn" onclick="copyToClipboard('rules-content')">Copy</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Commands Tab -->
+            <div id="commands-tab" class="tab-content">
+                <h2>Commands Reference</h2>
+
+                <!-- Setup Instructions -->
+                <div class="card">
+                    <h3>How to Use Commands (All IDEs)</h3>
+                    <div
+                        style="padding: 12px; background: rgba(0, 122, 204, 0.1); border-left: 3px solid var(--accent); margin-bottom: 15px;">
+                        <p style="margin: 0; color: var(--text-primary); font-size: 12px; line-height: 1.8;">
+                            <strong>Step 1:</strong> Create a folder where you'll work on n8n workflows<br>
+                            <strong>Step 2:</strong> Inside that folder, create a <code>commands</code> subfolder<br>
+                            <strong>Step 3:</strong> Ask your AI agent: <em>"Create a blank .md file in the commands
+                                folder"</em><br>
+                            <strong>Step 4:</strong> Copy the commands below and paste them into that file<br>
+                            <strong>Step 5:</strong> Reference this file when asking the agent to build workflows
+                        </p>
+                    </div>
+                    <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 20px;">
+                        💡 <strong>Example structure:</strong> <code>my-n8n-project/commands/n8n-commands.md</code>
+                    </div>
+                </div>
+
+                <!-- Commands Content -->
+                <div class="card">
+                    <h3>Available Commands</h3>
+                    <p style="margin-bottom: 15px; color: var(--text-secondary);">
+                        Copy the content below into your commands file.
+                    </p>
+                    <div class="form-group">
+                        <div class="config-block-wrapper">
+                            <div id="commands-content" class="code-block"
+                                style="white-space: pre-wrap; max-height: 600px; overflow-y: auto;">Loading commands...
+                            </div>
+                            <button class="copy-btn" onclick="copyToClipboard('commands-content')">Copy</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Skills Tab -->
+            <div id="skills-tab" class="tab-content">
+                <h2>AI Skills</h2>
+
+                <!-- What Are Skills -->
+                <div class="card">
+                    <h3>What Are Skills?</h3>
+                    <p style="margin-bottom: 15px; color: var(--text-primary); line-height: 1.6;">
+                        Skills are <strong>knowledge files</strong> that teach AI agents how to use n8n middleware tools
+                        correctly.
+                        They provide patterns, best practices, and examples that help agents build workflows more
+                        reliably.
+                    </p>
+                    <div
+                        style="padding: 12px; background: rgba(0, 122, 204, 0.1); border-left: 3px solid var(--accent); margin-bottom: 15px;">
+                        <p style="margin: 0; color: var(--text-primary); font-size: 12px; line-height: 1.6;">
+                            <strong>💡 Skills complement MCP tools</strong> — MCP tools execute commands, skills teach
+                            the agent <em>what</em> to do and <em>how</em> to do it correctly.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Available Skills -->
+                <div class="card">
+                    <h3>Available Skills (6)</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                        <div style="padding: 15px; background: var(--bg-input); border-left: 3px solid var(--accent);">
+                            <strong style="color: white;">n8n-middleware-tools</strong>
+                            <p style="font-size: 12px; color: var(--text-secondary); margin-top: 5px;">Master guide for
+                                62 MCP tools with usage patterns</p>
+                        </div>
+                        <div style="padding: 15px; background: var(--bg-input); border-left: 3px solid var(--success);">
+                            <strong style="color: white;">n8n-ai-connections</strong>
+                            <p style="font-size: 12px; color: var(--text-secondary); margin-top: 5px;">AI Agent workflow
+                                wiring and subnode connections</p>
+                        </div>
+                        <div style="padding: 15px; background: var(--bg-input); border-left: 3px solid #9b59b6;">
+                            <strong style="color: white;">n8n-workflow-patterns</strong>
+                            <p style="font-size: 12px; color: var(--text-secondary); margin-top: 5px;">5 proven
+                                architectural patterns (webhook, API, AI, etc.)</p>
+                        </div>
+                        <div style="padding: 15px; background: var(--bg-input); border-left: 3px solid #e67e22;">
+                            <strong style="color: white;">n8n-expression-syntax</strong>
+                            <p style="font-size: 12px; color: var(--text-secondary); margin-top: 5px;">Expression
+                                writing and common mistakes</p>
+                        </div>
+                        <div style="padding: 15px; background: var(--bg-input); border-left: 3px solid #3498db;">
+                            <strong style="color: white;">n8n-node-configuration</strong>
+                            <p style="font-size: 12px; color: var(--text-secondary); margin-top: 5px;">Operation-aware
+                                node configuration guidance</p>
+                        </div>
+                        <div style="padding: 15px; background: var(--bg-input); border-left: 3px solid var(--error);">
+                            <strong style="color: white;">n8n-validation-expert</strong>
+                            <p style="font-size: 12px; color: var(--text-secondary); margin-top: 5px;">Error
+                                interpretation and fix strategies</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Setup Instructions by IDE -->
+                <div class="card">
+                    <h3>Setup Instructions</h3>
+
+                    <!-- Antigravity -->
+                    <div style="margin-bottom: 25px;">
+                        <h4 style="color: var(--accent); margin-bottom: 10px;">Antigravity IDE</h4>
+                        <div
+                            style="padding: 12px; background: rgba(0, 122, 204, 0.1); border-left: 3px solid var(--accent);">
+                            <p style="margin: 0; color: var(--text-primary); font-size: 12px; line-height: 1.8;">
+                                <strong>Step 1:</strong> Create folder <code>.agent/skills/</code> in your project
+                                root<br>
+                                <strong>Step 2:</strong> Copy the skill folders from the skills path below<br>
+                                <strong>Step 3:</strong> Skills auto-activate based on context when you chat with the
+                                agent<br>
+                                <strong>Format:</strong> Each skill has a folder with <code>SKILL.md</code> file
+                            </p>
+                        </div>
+                        <div style="font-size: 11px; color: var(--text-secondary); margin-top: 8px;">
+                            💡 Skills are loaded automatically when matching your queries
+                        </div>
+                    </div>
+
+                    <!-- Cursor -->
+                    <div style="margin-bottom: 25px;">
+                        <h4 style="color: var(--accent); margin-bottom: 10px;">Cursor IDE</h4>
+                        <div
+                            style="padding: 12px; background: rgba(0, 122, 204, 0.1); border-left: 3px solid var(--accent);">
+                            <p style="margin: 0; color: var(--text-primary); font-size: 12px; line-height: 1.8;">
+                                <strong>Step 1:</strong> Create folder <code>.cursor/rules/</code> in your project
+                                root<br>
+                                <strong>Step 2:</strong> For each skill, create a subfolder (e.g.,
+                                <code>.cursor/rules/n8n-middleware-tools/</code>)<br>
+                                <strong>Step 3:</strong> Copy the <code>SKILL.md</code> file and rename to
+                                <code>RULE.md</code><br>
+                                <strong>Format:</strong> Markdown with YAML frontmatter
+                            </p>
+                        </div>
+                        <div style="font-size: 11px; color: var(--text-secondary); margin-top: 8px;">
+                            💡 Example: <code>.cursor/rules/n8n-middleware-tools/RULE.md</code>
+                        </div>
+                    </div>
+
+                    <!-- Windsurf -->
+                    <div style="margin-bottom: 25px;">
+                        <h4 style="color: var(--accent); margin-bottom: 10px;">Windsurf IDE</h4>
+                        <div
+                            style="padding: 12px; background: rgba(0, 122, 204, 0.1); border-left: 3px solid var(--accent);">
+                            <p style="margin: 0; color: var(--text-primary); font-size: 12px; line-height: 1.8;">
+                                <strong>Step 1:</strong> Click the <strong>3 dots</strong> in Cascade (top right)<br>
+                                <strong>Step 2:</strong> Select <strong>"Rules"</strong><br>
+                                <strong>Step 3:</strong> Create rules named after each skill (e.g.,
+                                <code>n8n-middleware-tools</code>)<br>
+                                <strong>Step 4:</strong> Paste the content from each <code>SKILL.md</code> file<br>
+                                <strong>Step 5:</strong> Set to <strong>"Always On"</strong> or <strong>"Agent
+                                    Requested"</strong>
+                            </p>
+                        </div>
+                        <div style="font-size: 11px; color: var(--text-secondary); margin-top: 8px;">
+                            💡 "Agent Requested" activates skills only when relevant
+                        </div>
+                    </div>
+
+                    <!-- Claude Code -->
+                    <div style="margin-bottom: 25px;">
+                        <h4 style="color: var(--accent); margin-bottom: 10px;">Claude Code / Other IDEs</h4>
+                        <div
+                            style="padding: 12px; background: rgba(0, 122, 204, 0.1); border-left: 3px solid var(--accent);">
+                            <p style="margin: 0; color: var(--text-primary); font-size: 12px; line-height: 1.8;">
+                                <strong>Option A:</strong> Copy skills to <code>~/.claude/skills/</code> (global)<br>
+                                <strong>Option B:</strong> Copy skills to project's <code>.agent/skills/</code>
+                                folder<br>
+                                <strong>Format:</strong> Markdown files with YAML frontmatter
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Skills Location -->
+                <div class="card">
+                    <h3>Skills Location</h3>
+                    <p style="margin-bottom: 10px; color: var(--text-secondary);">
+                        Skills are installed at the following path. Copy them to your project.
+                    </p>
+                    <div class="form-group">
+                        <div class="config-block-wrapper">
+                            <div id="skills-path" class="code-block">Loading...</div>
+                            <button class="copy-btn" onclick="copyToClipboard('skills-path')">Copy</button>
+                        </div>
+                    </div>
+                    <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-top: 15px;">
+                        <button id="open-skills-folder-btn" class="btn btn-primary">Open Skills Folder</button>
+                        <span style="color: var(--text-secondary); font-size: 11px;">Opens the folder containing all
+                            skill files</span>
+                    </div>
+                </div>
+
+                <!-- Quick Copy Individual Skills -->
+                <div class="card">
+                    <h3>Quick Copy: n8n-middleware-tools</h3>
+                    <p style="margin-bottom: 10px; color: var(--text-secondary);">
+                        This is the most important skill. Copy it to get started quickly.
+                    </p>
+                    <div class="form-group">
+                        <div class="config-block-wrapper">
+                            <div id="main-skill-content" class="code-block"
+                                style="white-space: pre-wrap; max-height: 400px; overflow-y: auto;">Loading skill...
+                            </div>
+                            <button class="copy-btn" onclick="copyToClipboard('main-skill-content')">Copy</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="schemas-tab" class="tab-content">
+                <h2>Node Schemas</h2>
+
+                <div class="card">
+                    <h3>Direct Download Link</h3>
+
+                    <div class="form-group">
+                        <label>Schema download URL (matches CLI endpoint path)</label>
+                        <div class="config-block-wrapper">
+                            <div id="schema-download-url" class="code-block">Loading...</div>
+                            <button class="copy-btn" onclick="copyToClipboard('schema-download-url')">Copy</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
+                        <button id="open-schema-download-btn" class="btn btn-primary">Open Download</button>
+                        <button id="open-schema-json-btn" class="btn btn-secondary">Open JSON</button>
+                        <span style="color: var(--text-secondary); font-size: 11px;">Uses local middleware at
+                            <code>http://127.0.0.1:3456</code></span>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="renderer.js"></script>
+    <script src="updater-ui.js"></script>
+</body>
+
+</html>

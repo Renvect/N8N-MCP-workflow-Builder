@@ -1,0 +1,113 @@
+# =========================
+# Dependencies
+# =========================
+node_modules/
+**/node_modules/
+package-lock.json
+**/package-lock.json
+
+# =========================
+# Build outputs
+# =========================
+dist/
+**/dist/
+build/
+**/build/
+out/
+**/out/
+target/
+**/target/
+release/
+**/release/
+
+# =========================
+# Binaries & Installers
+# =========================
+*.exe
+*.nupkg
+*.zip
+*.dmg
+*.pkg
+*.deb
+*.rpm
+*.AppImage
+*.msi
+*.snap
+
+# =========================
+# Electron specific
+# =========================
+electron-app/out/
+electron-app/dist/
+electron-app/build/
+electron-app/release/
+electron-app/node_modules/
+
+# =========================
+# Rust build artifacts
+# =========================
+rust-core/target/
+
+# =========================
+# MCP Server build
+# =========================
+mcp-server/dist/
+mcp-server/node_modules/
+
+# =========================
+# Large data / schema files
+# =========================
+*.nupkg
+schema.json
+node-types-schema.json
+
+# =========================
+# Logs
+# =========================
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+distwin*.log
+build_output.txt
+
+# =========================
+# IDE / Editor
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# =========================
+# OS files
+# =========================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# =========================
+# Environment
+# =========================
+.env
+.env.local
+.env.*.local
+
+# =========================
+# Temporary / State files
+# =========================
+*.tmp
+*.temp
+.agent_multi_workflow_state.json
+.agent_tool_state.json
+main_loaded.txt
+
+# =========================
+# Misc test/temp data
+# =========================
+temp_nodes.json
+test_connections.json
+test_simple_workflow.json
+connections_triage.json
+nodes_triage.json

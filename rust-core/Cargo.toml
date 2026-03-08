@@ -1,0 +1,22 @@
+[package]
+name = "n8n-agent-core"
+version = "0.1.0"
+edition = "2021"
+description = "Schema-driven n8n workflow builder core"
+authors = ["Your Company"]
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+clap = { version = "4.0", features = ["derive"] }
+uuid = { version = "1.0", features = ["v4"] }
+base64 = "0.21"
+thiserror = "1.0"
+
+[lib]
+name = "n8n_agent_core"
+path = "src/lib.rs"
+
+[[bin]]
+name = "n8n-agent"
+path = "src/main.rs"

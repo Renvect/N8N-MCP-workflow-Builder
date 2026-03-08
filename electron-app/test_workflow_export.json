@@ -1,0 +1,766 @@
+{
+  "name": "Modified Incident Triage",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "incident",
+        "responseMode": "responseNode"
+      },
+      "id": "7ba35b2a-c910-4271-9de8-23c6d2fc5188",
+      "name": "Incident Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        200,
+        300
+      ],
+      "webhookId": "571b9083"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Validate incident payload\nconst requiredFields = ['incidentId', 'severity', 'title', 'description', 'service', 'environment', 'occurredAt', 'requesterEmail'];\nconst validSeverities = ['P0', 'P1', 'P2', 'P3'];\nconst validEnvironments = ['prod', 'staging'];\n\nconst payload = $input.item.json.body || $input.item.json;\nconst errors = [];\n\n// Check required fields\nfor (const field of requiredFields) {\n  if (!payload[field]) {\n    errors.push(`Missing required field: ${field}`);\n  }\n}\n\n// Validate severity\nif (payload.severity && !validSeverities.includes(payload.severity)) {\n  errors.push(`Invalid severity '${payload.severity}'. Must be one of: ${validSeverities.join(', ')}`);\n}\n\n// Validate environment\nif (payload.environment && !validEnvironments.includes(payload.environment)) {\n  errors.push(`Invalid environment '${payload.environment}'. Must be one of: ${validEnvironments.join(', ')}`);\n}\n\n// Validate ISO timestamp\nif (payload.occurredAt && isNaN(Date.parse(payload.occurredAt))) {\n  errors.push('Invalid occurredAt timestamp. Must be ISO format.');\n}\n\nif (errors.length > 0) {\n  return [{\n    json: {\n      valid: false,\n      errors: errors,\n      statusCode: 400\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    valid: true,\n    ...payload,\n    receivedAt: new Date().toISOString()\n  }\n}];",
+        "mode": "runOnceForAllItems"
+      },
+      "id": "473abec9-55f8-4c35-b802-9fc2a62c85d5",
+      "name": "Validate Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.valid }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "afdc4d0e-aa93-4799-b840-80dbb12d7ab9",
+      "name": "Check Validation",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        600,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseCode": 400
+        },
+        "respondWith": "json",
+        "responseBody": "={{ { \"error\": \"Invalid payload\", \"details\": $json.errors } }}"
+      },
+      "id": "afb99789-f0dc-45f7-a915-82699603a8f4",
+      "name": "Return Validation Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        800,
+        450
+      ]
+    },
+    {
+      "parameters": {
+        "filterType": "manual",
+        "filters": {
+          "conditions": [
+            {
+              "condition": "equals",
+              "keyName": "incidentId",
+              "keyValue": "={{ $json.incidentId }}"
+            },
+            {
+              "condition": "dateTimeAfter",
+              "keyName": "receivedAt",
+              "keyValue": "={{ new Date(Date.now() - 30 * 60 * 1000).toISOString() }}"
+            }
+          ]
+        },
+        "limit": 1,
+        "matchType": "allFilters",
+        "operation": "getAll",
+        "returnAll": false,
+        "tableId": "incident_runs"
+      },
+      "id": "5dc70cd0-3399-41a6-89ce-ebf51c1e3354",
+      "name": "Check Idempotency",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        800,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "operation": "larger",
+              "value1": "={{ $json.length }}",
+              "value2": 0
+            }
+          ]
+        }
+      },
+      "id": "c013b0d3-8a53-4a37-8b22-16cde095a8f5",
+      "name": "Is Duplicate",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"success\": true, \"isDuplicate\": true, \"message\": \"Duplicate incident - updating existing record\", \"incidentId\": $('Validate Payload').item.json.incidentId } }}"
+      },
+      "id": "15ce4828-94c6-4708-ac4c-3616e7e35fcf",
+      "name": "Return Duplicate Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "operation": "regex",
+              "value1": "={{ $json.severity }}",
+              "value2": "^(P0|P1)$"
+            }
+          ]
+        }
+      },
+      "id": "fce8edde-e083-4ba3-a5dc-aeffc26d68dc",
+      "name": "Route By Severity",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "channel": "#incidents",
+        "operation": "post",
+        "resource": "message",
+        "text": "={{ '🚨 ' + $json.severity + ' Incident: ' + $json.title + '\\nService: ' + $json.service + ' (' + $json.environment + ')\\nID: ' + $json.incidentId + '\\nTime: ' + $json.occurredAt }}"
+      },
+      "id": "086a7d71-92cc-4f7e-8bfb-af86d6d3e509",
+      "name": "Send Slack Alert P0P1",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [
+        1400,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "body": "={{ { \"fields\": { \"project\": { \"key\": \"OPS\" }, \"summary\": $json.title, \"description\": JSON.stringify($json, null, 2), \"issuetype\": { \"name\": \"Bug\" }, \"priority\": { \"name\": $json.severity === 'P0' ? \"Highest\" : \"High\" }, \"labels\": [$json.severity, $json.service, $json.environment] } } }}",
+        "contentType": "json",
+        "jsonParameters": true,
+        "method": "POST",
+        "nodeCredentialType": "jiraApi",
+        "sendBody": true,
+        "url": "={{ $env.JIRA_URL }}/rest/api/2/issue"
+      },
+      "id": "bb4e5558-76ae-4053-bd85-ba63cdfc6cf1",
+      "name": "Create Jira Ticket",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1600,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "options": {
+          "timeout": 10000
+        },
+        "url": "={{ $env.STATUS_API_URL || 'https://status.example.com' }}/api/services/{{ $json.service }}"
+      },
+      "id": "3fb2411e-3a87-4847-a421-60f27182ee67",
+      "name": "Fetch Status API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1800,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "body": "={{ { \"query\": $json.title + ' ' + $json.service, \"timeRange\": \"30m\", \"from\": new Date(Date.now() - 30 * 60 * 1000).toISOString(), \"to\": new Date().toISOString() } }}",
+        "contentType": "json",
+        "jsonParameters": true,
+        "method": "POST",
+        "options": {
+          "timeout": 15000
+        },
+        "sendBody": true,
+        "url": "={{ $env.LOGS_API_URL || 'https://logs.example.com' }}/search"
+      },
+      "id": "07aa3825-79a2-4e7e-a382-c6dea17fd372",
+      "name": "Query Logs API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        2000,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare context for LLM analysis\nconst incident = $('Route By Severity').first().json;\nconst statusResponse = $('Fetch Status API').first().json;\nconst logsResponse = $('Query Logs API').first().json;\n\nconst context = {\n  incident: {\n    id: incident.incidentId,\n    severity: incident.severity,\n    title: incident.title,\n    description: incident.description,\n    service: incident.service,\n    environment: incident.environment,\n    occurredAt: incident.occurredAt\n  },\n  currentStatus: statusResponse || { error: 'Status API unavailable' },\n  recentLogs: logsResponse || { error: 'Logs API unavailable' }\n};\n\nconst prompt = `Analyze this production incident and provide a JSON response with the following structure:\n{\n  \"rootCauses\": [\"cause 1\", \"cause 2\", \"cause 3\"],\n  \"remediationSteps\": [\"step 1\", \"step 2\", \"step 3\"],\n  \"needHumanInput\": boolean,\n  \"customerUpdate\": \"brief customer-safe status message\"\n}\n\nIncident Context:\n${JSON.stringify(context, null, 2)}\n\nFocus on actionable insights. If data is insufficient, set needHumanInput to true.`;\n\nreturn [{\n  json: {\n    prompt,\n    incidentData: incident,\n    contextData: context\n  }\n}];",
+        "mode": "runOnceForAllItems"
+      },
+      "id": "e053eaa0-3f18-4d4c-a7a7-cd8f3b13b39a",
+      "name": "Prepare LLM Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2200,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "messages": {
+          "values": [
+            {
+              "content": "You are an expert SRE analyzing production incidents. Always respond with valid JSON only.",
+              "role": "system"
+            },
+            {
+              "content": "={{ $json.prompt }}",
+              "role": "user"
+            }
+          ]
+        },
+        "model": "gpt-4o",
+        "operation": "message",
+        "options": {
+          "maxTokens": 1000,
+          "temperature": 0.3
+        },
+        "resource": "text"
+      },
+      "id": "df32c2c3-dab9-4b3a-9322-2436bef211bf",
+      "name": "LLM Analyze Incident",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [
+        2400,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse LLM response and handle errors\nconst llmOutput = $input.first().json.message?.content || $input.first().json.choices?.[0]?.message?.content;\nconst incidentData = $('Prepare LLM Context').first().json.incidentData;\n\ntry {\n  const analysis = JSON.parse(llmOutput);\n  \n  // Validate required fields\n  if (!analysis.rootCauses || !analysis.remediationSteps || typeof analysis.needHumanInput !== 'boolean') {\n    throw new Error('Invalid LLM response structure');\n  }\n  \n  return [{\n    json: {\n      ...incidentData,\n      analysis,\n      needHumanInput: analysis.needHumanInput,\n      actionsTaken: ['llm_analysis_completed']\n    }\n  }];\n} catch (error) {\n  // Fallback if LLM parsing fails\n  return [{\n    json: {\n      ...incidentData,\n      needHumanInput: true,\n      parseError: true,\n      errorMessage: error.message,\n      actionsTaken: ['llm_analysis_failed']\n    }\n  }];\n}",
+        "mode": "runOnceForAllItems"
+      },
+      "id": "363462b0-8a32-42f2-8a80-53507d0bfa7c",
+      "name": "Parse LLM Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2600,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.needHumanInput }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "11d21d46-99d8-41a7-b3e3-acf75c1faff4",
+      "name": "Need Human Input",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2800,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "incidents@company.com",
+        "subject": "Clarification needed for incident {{ $json.incidentId }}",
+        "text": "We received your incident report but need additional information to proceed with automated remediation.\n\nIncident: {{ $json.title }}\nService: {{ $json.service }}\nSeverity: {{ $json.severity }}\n\nCould you please provide more details about:\n1. What specific symptoms are you observing?\n2. What actions have you already tried?\n3. Are there any recent deployments or changes?\n\nOur team will review and respond within the SLA timeframe.\n\nIncident ID: {{ $json.incidentId }}",
+        "toEmail": "={{ $json.requesterEmail }}"
+      },
+      "id": "d9e26c21-1755-4e20-8f6e-e68f54789c7d",
+      "name": "Ask Clarifying Question",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [
+        3000,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "operation": "contains",
+              "value1": "={{ $json.service }}",
+              "value2": "db"
+            }
+          ]
+        }
+      },
+      "id": "8853c84a-300a-4100-9e8b-42a0a5524797",
+      "name": "Check Service Type",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3000,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "options": {
+          "timeout": 10000
+        },
+        "url": "={{ $env.STATUS_API_URL || 'https://status.example.com' }}/api/services/{{ $json.service }}"
+      },
+      "id": "ee0dc89f-59fe-4f22-b997-94dd511e9684",
+      "name": "Recheck Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        3600,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "operation": "notEqual",
+              "value1": "={{ $json.status || 'unknown' }}",
+              "value2": "healthy"
+            }
+          ]
+        }
+      },
+      "id": "08281738-f89d-4bbb-817a-4e35ba3dee29",
+      "name": "Still Degraded",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3800,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "channel": "#incidents",
+        "operation": "post",
+        "resource": "message",
+        "text": "🚨 ESCALATION: Incident {{ $('Parse LLM Response').item.json.incidentId }} still degraded after auto-remediation\\n\\nService: {{ $('Parse LLM Response').item.json.service }}\\nSeverity: {{ $('Parse LLM Response').item.json.severity }}\\nActions taken: Auto-remediation attempted\\n\\nManual intervention required!"
+      },
+      "id": "5b2d313c-a49f-434e-b58a-efb932cc5bb9",
+      "name": "Escalate Slack",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [
+        4000,
+        250
+      ]
+    },
+    {
+      "parameters": {
+        "body": "={{ { \"fields\": { \"priority\": { \"name\": \"Highest\" } } } }}",
+        "contentType": "json",
+        "jsonParameters": true,
+        "method": "PUT",
+        "sendBody": true,
+        "url": "={{ $env.JIRA_URL }}/rest/api/2/issue/{{ $('Create Jira Ticket').item.json.key }}"
+      },
+      "id": "288f1f4c-5844-4bd9-9189-0462c0ba3f6e",
+      "name": "Update Jira Priority",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        4200,
+        250
+      ]
+    },
+    {
+      "parameters": {
+        "body": "={{ { \"fields\": { \"project\": { \"key\": \"OPS\" }, \"summary\": $json.title, \"description\": JSON.stringify($json, null, 2), \"issuetype\": { \"name\": \"Task\" }, \"priority\": { \"name\": $json.severity === 'P2' ? \"Medium\" : \"Low\" }, \"labels\": [$json.severity, $json.service, $json.environment] } } }}",
+        "contentType": "json",
+        "jsonParameters": true,
+        "method": "POST",
+        "sendBody": true,
+        "url": "={{ $env.JIRA_URL }}/rest/api/2/issue"
+      },
+      "id": "ed947245-2af9-460b-b511-87cae343766d",
+      "name": "Create P2P3 Ticket",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1400,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "incidents@company.com",
+        "subject": "Incident {{ $json.incidentId }} Acknowledged",
+        "text": "Your incident has been logged and assigned to our team.\n\nIncident Details:\n- ID: {{ $json.incidentId }}\n- Title: {{ $json.title }}\n- Service: {{ $json.service }}\n- Severity: {{ $json.severity }}\n- Environment: {{ $json.environment }}\n\nExpected Response Times:\n- P2: 4 hours\n- P3: 8 hours\n\nYou will receive updates as we investigate and resolve this issue.\n\nTicket: {{ $('Create P2P3 Ticket').item.json.key }}",
+        "toEmail": "={{ $json.requesterEmail }}"
+      },
+      "id": "ff74aafb-dc03-42ee-9085-da3a593e4087",
+      "name": "Send P2P3 Acknowledgment",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [
+        1600,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "additionalFields": {
+          "actionsTaken": "={{ JSON.stringify($json.actionsTaken || []) }}",
+          "environment": "={{ $json.environment }}",
+          "finalOutcome": "={{ $json.finalOutcome || 'processed' }}",
+          "incidentId": "={{ $json.incidentId }}",
+          "receivedAt": "={{ $json.receivedAt }}",
+          "service": "={{ $json.service }}",
+          "severity": "={{ $json.severity }}",
+          "slackMessageTs": "={{ $('Send Slack Alert P0P1').item.json.ts || null }}",
+          "ticketKey": "={{ $('Create Jira Ticket').item.json.key || $('Create P2P3 Ticket').item.json.key || null }}"
+        },
+        "operation": "insert",
+        "tableId": "incident_runs"
+      },
+      "id": "61d49ab2-8e78-4fd6-a98c-91e37c037c4a",
+      "name": "Log to Supabase",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        4400,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"success\": true, \"incidentId\": $json.incidentId, \"severity\": $json.severity, \"ticketCreated\": $('Create Jira Ticket').item.json.key || $('Create P2P3 Ticket').item.json.key, \"actionsTaken\": $json.actionsTaken || [], \"message\": \"Incident processed successfully\" } }}"
+      },
+      "id": "d64e6f48-9344-4328-9988-c4626929ef8c",
+      "name": "Return Success Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        4600,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Incident Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Payload": {
+      "main": [
+        [
+          {
+            "node": "Check Validation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Validation": {
+      "main": [
+        [
+          {
+            "node": "Check Idempotency",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Validation Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Idempotency": {
+      "main": [
+        [
+          {
+            "node": "Is Duplicate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Duplicate": {
+      "main": [
+        [
+          {
+            "node": "Return Duplicate Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Route By Severity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route By Severity": {
+      "main": [
+        [
+          {
+            "node": "Send Slack Alert P0P1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create P2P3 Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Slack Alert P0P1": {
+      "main": [
+        [
+          {
+            "node": "Create Jira Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Jira Ticket": {
+      "main": [
+        [
+          {
+            "node": "Fetch Status API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Status API": {
+      "main": [
+        [
+          {
+            "node": "Query Logs API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query Logs API": {
+      "main": [
+        [
+          {
+            "node": "Prepare LLM Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare LLM Context": {
+      "main": [
+        [
+          {
+            "node": "LLM Analyze Incident",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM Analyze Incident": {
+      "main": [
+        []
+      ]
+    },
+    "Parse LLM Response": {
+      "main": [
+        [
+          {
+            "node": "Need Human Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Need Human Input": {
+      "main": [
+        [
+          {
+            "node": "Ask Clarifying Question",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Check Service Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Service Type": {
+      "main": [
+        [],
+        []
+      ]
+    },
+    "Still Degraded": {
+      "main": [
+        [
+          {
+            "node": "Escalate Slack",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log to Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Escalate Slack": {
+      "main": [
+        [
+          {
+            "node": "Update Jira Priority",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Jira Priority": {
+      "main": [
+        [
+          {
+            "node": "Log to Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create P2P3 Ticket": {
+      "main": [
+        [
+          {
+            "node": "Send P2P3 Acknowledgment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send P2P3 Acknowledgment": {
+      "main": [
+        [
+          {
+            "node": "Log to Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ask Clarifying Question": {
+      "main": [
+        [
+          {
+            "node": "Log to Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log to Supabase": {
+      "main": [
+        [
+          {
+            "node": "Return Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "1"
+}
