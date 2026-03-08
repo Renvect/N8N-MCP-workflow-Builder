@@ -12,7 +12,6 @@ import * as os from 'os';
 import * as https from 'https';
 import * as http from 'http';
 import Store from 'electron-store';
-// machineIdSync removed (license validation stripped)
 import { startApiServer, stopApiServer, API_PORT } from './api-server';
 import { initUpdater } from './updater';
 import { CdpClient } from './cdp-client';
@@ -159,8 +158,6 @@ const store = new Store({
         slackWebhookUrl: '',
         jiraUrl: '',
         jiraApiToken: '',
-        supabaseUrl: '',
-        supabaseKey: '',
     },
 });
 
@@ -524,8 +521,6 @@ function buildMcpEnv(): Record<string, string> {
         SLACK_WEBHOOK_URL: store.get('slackWebhookUrl') as string,
         JIRA_URL: store.get('jiraUrl') as string,
         JIRA_API_TOKEN: store.get('jiraApiToken') as string,
-        SUPABASE_URL: store.get('supabaseUrl') as string,
-        SUPABASE_KEY: store.get('supabaseKey') as string,
     };
 
     return env;
@@ -733,15 +728,13 @@ ipcMain.handle('get-config', () => {
         slackWebhookUrl: store.get('slackWebhookUrl'),
         jiraUrl: store.get('jiraUrl'),
         jiraApiToken: store.get('jiraApiToken'),
-        supabaseUrl: store.get('supabaseUrl'),
-        supabaseKey: store.get('supabaseKey'),
     };
 });
 
 ipcMain.handle('save-config', (_, config: Record<string, string>) => {
     const allowedKeys = new Set([
         'n8nUrl', 'n8nAuthType', 'n8nApiKey', 'n8nEmail', 'n8nPassword',
-        'slackWebhookUrl', 'jiraUrl', 'jiraApiToken', 'supabaseUrl', 'supabaseKey'
+        'slackWebhookUrl', 'jiraUrl', 'jiraApiToken'
     ]);
 
     for (const [key, value] of Object.entries(config)) {
@@ -963,11 +956,7 @@ if (isMcpMode) {
             logToFile(
                 `[startup] userData=${app.getPath('userData')} storeDir=${storeDir} storePath=${(store as any)?.path || 'unknown'} name=${app.getName()}`,
             );
-            logToFile(
-                `[startup] stored licenseKeyLen=${String((((store.get('licenseKey') as string) || '').trim() || '').length)} storedDeviceIdLen=${String(
-                    ((((store.get('licenseDeviceId') as string) || '').trim() || '').length),
-                )} expiresAt=${String((store.get('licenseExpiresAt') as string) || '')}`,
-            );
+            // License validation removed for open-source release
         } catch {
             // ignore
         }

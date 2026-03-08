@@ -74,7 +74,6 @@ Before building from source, you need the following installed on your system:
 - `electron-updater` ^6.6.2 — Auto-update support
 - `electron-store` ^8.1.0 — Persistent config storage
 - `express` ^5.2.1 — HTTP API server
-- `node-machine-id` ^1.1.12 — Hardware fingerprinting
 
 **Dev dependencies:**
 - `electron` ^28.0.0 — Desktop framework

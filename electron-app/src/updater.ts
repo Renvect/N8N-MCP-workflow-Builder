@@ -17,8 +17,8 @@ interface DownloadProgress {
   bytesPerSecond: number;
 }
 
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://tvxezpnyhgzqtzccdjeu.supabase.co';
-const UPDATE_FEED_URL = `${SUPABASE_URL}/functions/v1/desktop-updates`;
+// Update feed URL - configure via UPDATER_FEED_URL env variable
+const UPDATE_FEED_URL = process.env.UPDATER_FEED_URL || '';
 
 let mainWindow: BrowserWindow | null = null;
 let updateStore: Store<any> | null = null;

@@ -18,12 +18,6 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as https from 'https';
 import * as http from 'http';
-import { checkCachedLicense, validateLicense } from './license.js';
-
-// License validation state
-let licenseValidated = false;
-let licenseKey: string | null = null;
-
 // Configuration (loaded from electron-store or env)
 interface N8nConfig {
     type: 'selfhosted' | 'cloud';

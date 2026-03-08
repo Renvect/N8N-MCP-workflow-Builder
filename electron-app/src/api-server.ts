@@ -27,10 +27,6 @@ interface N8nConfig {
     n8nPassword: string;
 }
 
-interface SupabaseConfig {
-    supabaseUrl: string;
-    supabaseKey: string;
-}
 
 // Store reference passed from main process
 let configStore: any = null;
@@ -59,24 +55,6 @@ function getN8nConfig(): N8nConfig {
     };
 }
 
-function getSupabaseConfig(): SupabaseConfig {
-    const DEFAULT_SUPABASE_URL = 'https://tvxezpnyhgzqtzccdjeu.supabase.co';
-
-    const configuredSupabaseUrl = ((configStore?.get?.('supabaseUrl') as string) || '').trim();
-    const supabaseUrl = /^https?:\/\//i.test(configuredSupabaseUrl)
-        ? configuredSupabaseUrl.replace(/\/+$/, '')
-        : DEFAULT_SUPABASE_URL;
-
-    const supabaseKey = (
-        ((configStore?.get?.('supabaseKey') as string) || '').trim() ||
-        (process.env.SUPABASE_ANON_KEY || '').trim() ||
-        (process.env.VITE_SUPABASE_PUBLISHABLE_KEY || '').trim() ||
-        (process.env.SUPABASE_PUBLISHABLE_KEY || '').trim() ||
-        (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
-    );
-
-    return { supabaseUrl, supabaseKey };
-}
 
 /**
  * Make authenticated request to n8n API
@@ -370,14 +348,12 @@ async function fetchRemoteNodeSchemaWithSession(): Promise<any[] | null> {
 async function getNodeSchema(refresh = false): Promise<any[]> {
     const now = Date.now();
     const cfg = getN8nConfig();
-    const supa = getSupabaseConfig();
     const cacheKey = [
         cfg.n8nUrl,
         cfg.n8nAuthType,
         cfg.n8nApiKey,
         cfg.n8nEmail,
         cfg.n8nPassword,
-        supa.supabaseUrl,
     ].join('|');
 
     if (NODE_SCHEMA_CACHE_KEY && NODE_SCHEMA_CACHE_KEY !== cacheKey) {

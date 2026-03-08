@@ -179,7 +179,8 @@ window.copyToClipboard = copyToClipboard;
 
 function populateSchemaLinks() {
     try {
-        const remoteSchemaUrl = 'https://tvxezpnyhgzqtzccdjeu.supabase.co/storage/v1/object/public/node-schemas/schema.json';
+        // Schema is fetched from your connected n8n instance after connecting
+        const remoteSchemaUrl = '';
         if (elements.schemaDownloadUrl) elements.schemaDownloadUrl.textContent = remoteSchemaUrl;
         if (elements.openSchemaDownloadBtn) {
             elements.openSchemaDownloadBtn.addEventListener('click', () => window.electronAPI.openExternal(remoteSchemaUrl));
