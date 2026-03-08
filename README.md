@@ -2,6 +2,7 @@
 
 > Desktop middleware that gives AI-powered IDEs (Cursor, Windsurf, Antigravity, Claude Code) **schema-driven n8n workflow building** capabilities via the Model Context Protocol (MCP).
 
+MCP is also capable connecting to Lovable.dev
 ---
 
 ## What It Does
